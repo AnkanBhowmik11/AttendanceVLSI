@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #dee2e6;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .student-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+
+        .student-item:hover {
+            background-color: #f8f9ff;
+        }
+
+        .student-item:last-child {
+            border-bottom: none;
+        }
+
+        .checkbox-wrapper {
+            position: relative;
+            margin-right: 15px;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox.checked {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-color: #4facfe;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .student-info {
+            flex: 1;
+        }
+
+        .student-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .student-roll {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .selected-count {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .generate-section {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        .output-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .output-text {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-line;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .btn-copy {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            color: #333;
+            width: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-bottom: 2px solid #eee;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: #4facfe;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VLSI Attendance Tracker</h1>
+            <p>Select students to mark attendance</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="selectAll()">Select All</button>
+            <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+        </div>
+
+        <input type="text" class="search-box" placeholder="Search students..." oninput="filterStudents(this.value)">
+
+        <div class="student-list" id="studentList">
+            <!-- Students will be populated here -->
+        </div>
+
+        <div class="selected-count" id="selectedCount">
+            0 students selected
+        </div>
+
+        <div class="generate-section">
+            <button class="btn btn-generate" onclick="generateAttendance()">
+                📋 Generate Today's Attendance
+            </button>
+
+            <div class="output-section" id="outputSection">
+                <div class="output-text" id="outputText"></div>
+                <button class="btn btn-copy" onclick="copyToClipboard()">
+                    📋 Copy Attendance List
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample student database - you can modify this list
+        const students = [
+
+  { name: "Ragini Singh", rollNo: "10032624001" },
+  { name: "Shubhajit Sarkar", rollNo: "10032624002" },
+  { name: "Manami Dey", rollNo: "10032624003" },
+  { name: "Harshita Singh", rollNo: "10032624005" },
+  { name: "Chunnu Kumar", rollNo: "10032624006" },
+  { name: "Ali Samiya Parvin", rollNo: "10032624007" },
+  { name: "Ariyan Kumar Mahato", rollNo: "10032624008" },
+  { name: "Prolayjit Biswas", rollNo: "10032624009" },
+  { name: "Pratyush Parui", rollNo: "10032624010" },
+  { name: "Saumyadeep Ghosh", rollNo: "10032624011" },
+  { name: "Subhajit Halder", rollNo: "10032624012" },
+  { name: "Sumanta Sarathi Sarkar", rollNo: "10032624013" },
+  { name: "Md Abdullah", rollNo: "10032624014" },
+  { name: "Saikat Das", rollNo: "10032624015" },
+  { name: "Arghya Roy", rollNo: "10032624016" },
+  { name: "Harshat Basak", rollNo: "10032624017" },
+  { name: "Anindita Porel", rollNo: "10032624018" },
+  { name: "Priyanka Mistry", rollNo: "10032624019" },
+  { name: "Subinoy Murmu", rollNo: "10032624020" },
+  { name: "Prerana Saha", rollNo: "10032624021" },
+  { name: "Sayantika Ghosh", rollNo: "10032624022" },
+  { name: "Khushnood Alam Afaqui", rollNo: "10032624023" },
+  { name: "Pawan Kumar", rollNo: "10032624024" },
+  { name: "Ranit Mandal", rollNo: "10032624025" },
+  { name: "Samima Khatun", rollNo: "10032624026" },
+  { name: "Naushad Alam Mansoori", rollNo: "10032624027" },
+  { name: "Abhishek Choubey", rollNo: "10032624028" },
+  { name: "Snehasish Nag", rollNo: "10032624029" },
+  { name: "Abhirup Sasmal", rollNo: "10032624030" },
+  { name: "Tonmoy Gayen", rollNo: "10032624031" },
+  { name: "Aditya Ghorai", rollNo: "10032624032" },
+  { name: "Md Rounak Mondal", rollNo: "10032624033" },
+  { name: "Raja Dafadar", rollNo: "10032624034" },
+  { name: "Souvik Basak", rollNo: "10032624035" },
+  { name: "Shubham Kumar Soni", rollNo: "10032624036" },
+  { name: "Tanmoy Sarkar", rollNo: "10032624037" },
+  { name: "Debjyoti Das", rollNo: "10032624038" },
+  { name: "Rabinath Kumar", rollNo: "10032624039" },
+  { name: "Trina Diger", rollNo: "10032624040" },
+  { name: "Ashish Kumar", rollNo: "10032624041" },
+  { name: "Amardeep Kumar", rollNo: "10032624042" },
+  { name: "Ravi Prakash", rollNo: "10032624043" },
+  { name: "Ankan Bhowmik", rollNo: "10032624044" },
+  { name: "Abhijit Dutta", rollNo: "10032624045" },
+  { name: "Subhankar Ghosh", rollNo: "10032624047" },
+  { name: "Jakia Sultana", rollNo: "10032624048" },
+  { name: "Rimpa Dwari", rollNo: "10032624049" },
+  { name: "Anirban Dey", rollNo: "10032624050" },
+  { name: "Suparno Samanta", rollNo: "10032624069" },
+  { name: "Aparajita Chattopadhyay", rollNo: "10032624070" },
+  { name: "Agnick Ghosh", rollNo: "10032624071" }
+
+        ];
+
+        let selectedStudents = new Set();
+        let filteredStudents = [...students];
+
+        function renderStudents() {
+            const listContainer = document.getElementById('studentList');
+            
+            if (filteredStudents.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">No students found</div>';
+                return;
+            }
+
+            listContainer.innerHTML = filteredStudents.map((student, index) => `
+                <div class="student-item" onclick="toggleStudent('${student.rollNo}')">
+                    <div class="checkbox-wrapper">
+                        <div class="checkbox ${selectedStudents.has(student.rollNo) ? 'checked' : ''}" 
+                             id="checkbox-${student.rollNo}"></div>
+                    </div>
+                    <div class="student-info">
+                        <div class="student-name">${student.name}</div>
+                        <div class="student-roll">Roll No: ${student.rollNo}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            updateSelectedCount();
+        }
+
+        function toggleStudent(rollNo) {
+            if (selectedStudents.has(rollNo)) {
+                selectedStudents.delete(rollNo);
+            } else {
+                selectedStudents.add(rollNo);
+            }
+            
+            const checkbox = document.getElementById(`checkbox-${rollNo}`);
+            checkbox.classList.toggle('checked');
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const count = selectedStudents.size;
+            document.getElementById('selectedCount').textContent = 
+                `${count} student${count !== 1 ? 's' : ''} selected`;
+        }
+
+        function selectAll() {
+            filteredStudents.forEach(student => {
+                selectedStudents.add(student.rollNo);
+            });
+            renderStudents();
+        }
+
+        function clearAll() {
+            selectedStudents.clear();
+            renderStudents();
+            document.getElementById('outputSection').style.display = 'none';
+        }
+
+        function filterStudents(searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filteredStudents = students.filter(student => 
+                student.name.toLowerCase().includes(term) || 
+                student.rollNo.toLowerCase().includes(term)
+            );
+            renderStudents();
+        }
+
+        function generateAttendance() {
+            if (selectedStudents.size === 0) {
+                alert('Please select at least one student');
+                return;
+            }
+
+            const selectedStudentsList = students.filter(student => 
+                selectedStudents.has(student.rollNo)
+            );
+
+            const attendanceText = selectedStudentsList
+                .map(student => `${student.name} (${student.rollNo})`)
+                .join('\n');
+
+            document.getElementById('outputText').textContent = attendanceText;
+            document.getElementById('outputSection').style.display = 'block';
+        }
+
+        function copyToClipboard() {
+            const outputText = document.getElementById('outputText');
+            const textToCopy = outputText.textContent;
+
+            // Try to use the modern clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showCopySuccess();
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(textToCopy);
+                });
+            } else {
+                fallbackCopyTextToClipboard(textToCopy);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopySuccess();
+            } catch (err) {
+                alert('Failed to copy text. Please select and copy manually.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess() {
+            const copyBtn = document.querySelector('.btn-copy');
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '✅ Copied!';
+            copyBtn.style.background = 'linear-gradient(135deg, #90EE90 0%, #98FB98 100%)';
+            
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.style.background = 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)';
+            }, 2000);
+        }
+
+        // Initialize the app
+        renderStudents();
+    </script>
+</body>
+</html>
