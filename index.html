@@ -204,6 +204,14 @@
             width: 100%;
         }
 
+        .btn-pdf {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            color: #333;
+            padding: 10px 16px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -270,6 +278,9 @@
 
             <div class="output-section" id="outputSection">
                 <div class="output-text" id="outputText"></div>
+                <button class="btn btn-pdf" onclick="openPdfOptionsPopup()" aria-label="Export attendance as PDF">
+                    📄 PDF
+                </button>
                 <button class="btn btn-copy" onclick="copyToClipboard()">
                     📋 Copy Attendance List
                 </button>
@@ -280,6 +291,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         // Sample student database - you can modify this list
         const students = [
@@ -347,6 +359,10 @@
   { name: "Kaushal Kishor Kant", rollNo: "10032625067" }
 
         ];
+
+        const PDF_BLOB_REVOKE_DELAY_MS = 2 * 60 * 1000;
+        const A4_PAGE_WIDTH_MM = 210;
+        const A4_PAGE_HEIGHT_MM = 297;
 
         let selectedStudents = new Set();
         let filteredStudents = [...students];
@@ -421,9 +437,7 @@
                 return;
             }
 
-            const selectedStudentsList = students.filter(student => 
-                selectedStudents.has(student.rollNo)
-            );
+            const selectedStudentsList = getSelectedStudentsList();
 
             const attendanceText = selectedStudentsList
                 .map(student => `${student.name} (${student.rollNo})`)
@@ -431,6 +445,269 @@
 
             document.getElementById('outputText').textContent = attendanceText;
             document.getElementById('outputSection').style.display = 'block';
+        }
+
+        function getSelectedStudentsList() {
+            return students.filter(student => selectedStudents.has(student.rollNo));
+        }
+
+        function getFormattedDate() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = String(today.getFullYear()).slice(-2);
+            return `${day}.${month}.${year}`;
+        }
+
+        function truncateTextToWidth(doc, text, maxWidth) {
+            if (doc.getTextWidth(text) <= maxWidth) {
+                return text;
+            }
+
+            let truncated = text;
+            while (truncated.length > 0 && doc.getTextWidth(`${truncated}...`) > maxWidth) {
+                truncated = truncated.slice(0, -1);
+            }
+            return `${truncated}...`;
+        }
+
+        function openPdfOptionsPopup() {
+            const selectedStudentsList = getSelectedStudentsList();
+            if (selectedStudentsList.length === 0) {
+                alert('Please select at least one student');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                padding: 16px;
+                box-sizing: border-box;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: #fff;
+                    border-radius: 14px;
+                    padding: 20px;
+                    width: 100%;
+                    max-width: 360px;
+                    box-sizing: border-box;
+                ">
+                    <h3 style="margin: 0 0 14px; color: #333;">PDF Options</h3>
+                    <label for="pdfTitleInput" style="display: block; margin-bottom: 6px; color: #333; font-weight: 600;">
+                        Add Title (optional)
+                    </label>
+                    <input
+                        id="pdfTitleInput"
+                        type="text"
+                        maxlength="20"
+                        placeholder="Enter title"
+                        style="
+                            width: 100%;
+                            padding: 10px 12px;
+                            border: 1px solid #ddd;
+                            border-radius: 10px;
+                            margin-bottom: 14px;
+                            box-sizing: border-box;
+                        "
+                    />
+                    <p style="margin: 0 0 10px; color: #333; font-weight: 600;">Columns</p>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #555;">
+                        <input type="checkbox" checked disabled />
+                        Sl No (default)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #555;">
+                        <input type="checkbox" checked disabled />
+                        Name (required)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; color: #555;">
+                        <input id="pdfRollToggle" type="checkbox" checked />
+                        Roll No
+                    </label>
+                    <div style="display: flex; gap: 10px;">
+                        <button
+                            id="cancelPdfOptions"
+                            style="
+                                flex: 1;
+                                border: none;
+                                border-radius: 10px;
+                                padding: 10px 12px;
+                                background: #f0f0f0;
+                                color: #333;
+                                font-weight: 600;
+                                cursor: pointer;
+                            "
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            id="confirmPdfOptions"
+                            style="
+                                flex: 1;
+                                border: none;
+                                border-radius: 10px;
+                                padding: 10px 12px;
+                                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                                color: #fff;
+                                font-weight: 600;
+                                cursor: pointer;
+                            "
+                        >
+                            Generate and Share
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            const closeModal = () => {
+                if (modal.parentNode) {
+                    modal.parentNode.removeChild(modal);
+                }
+            };
+
+            modal.querySelector('#cancelPdfOptions').addEventListener('click', closeModal);
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            modal.querySelector('#confirmPdfOptions').addEventListener('click', () => {
+                const titleInput = modal.querySelector('#pdfTitleInput');
+                const rollNoToggle = modal.querySelector('#pdfRollToggle');
+                const customTitle = titleInput.value.trim().slice(0, 20);
+                const includeRollNo = rollNoToggle.checked;
+                closeModal();
+                generateAttendancePdf({ customTitle, includeRollNo });
+            });
+
+            modal.querySelector('#pdfTitleInput').focus();
+        }
+
+        function generateAttendancePdf(options = {}) {
+            const selectedStudentsList = getSelectedStudentsList();
+            const customTitle = typeof options.customTitle === 'string' ? options.customTitle.trim() : '';
+            const includeRollNo = options.includeRollNo !== false;
+
+            if (selectedStudentsList.length === 0) {
+                alert('Please select at least one student');
+                return;
+            }
+
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert('Unable to load PDF library. Please check your internet connection or try again later.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const startY = customTitle ? 24 : 14;
+            const lineHeight = 6;
+            const marginX = 10;
+            const gap = 8;
+            const bottomMargin = 10;
+            const colWidth = (A4_PAGE_WIDTH_MM - (marginX * 2) - gap) / 2;
+            const maxRows = Math.floor((A4_PAGE_HEIGHT_MM - startY - bottomMargin) / lineHeight);
+            const maxStudentsPerPage = maxRows * 2;
+            const splitIndex = Math.ceil(selectedStudentsList.length / 2);
+
+            if (splitIndex > maxRows) {
+                const studentsToDeselect = selectedStudentsList.length - maxStudentsPerPage;
+                alert(`Cannot generate PDF: ${selectedStudentsList.length} students selected exceeds the one-page limit of ${maxStudentsPerPage}. Please deselect at least ${studentsToDeselect} student(s).`);
+                return;
+            }
+
+            if (customTitle) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.text(customTitle, A4_PAGE_WIDTH_MM / 2, 14, { align: 'center' });
+            }
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+
+            const formatEntry = (student, serialNumber) => {
+                if (includeRollNo) {
+                    return `${serialNumber}. ${student.name} (${student.rollNo})`;
+                }
+                return `${serialNumber}. ${student.name}`;
+            };
+
+            for (let i = 0; i < splitIndex; i++) {
+                const y = startY + (i * lineHeight);
+                const leftText = formatEntry(selectedStudentsList[i], i + 1);
+                doc.text(truncateTextToWidth(doc, leftText, colWidth), marginX, y);
+
+                const rightIndex = i + splitIndex;
+                if (rightIndex < selectedStudentsList.length) {
+                    const rightText = formatEntry(selectedStudentsList[rightIndex], rightIndex + 1);
+                    doc.text(
+                        truncateTextToWidth(doc, rightText, colWidth),
+                        marginX + colWidth + gap,
+                        y
+                    );
+                }
+            }
+
+            const formattedDate = getFormattedDate();
+            const shareTitle = customTitle || `Attendance - ${formattedDate}`;
+            const fileName = `attendance-${formattedDate}.pdf`;
+            const pdfBlob = doc.output('blob');
+            sharePdfFile(pdfBlob, fileName, shareTitle);
+        }
+
+        function sharePdfFile(pdfBlob, fileName, shareTitle) {
+            const pdfFile = typeof File !== 'undefined'
+                ? new File([pdfBlob], fileName, { type: 'application/pdf' })
+                : null;
+
+            if (
+                pdfFile &&
+                navigator.share &&
+                navigator.canShare &&
+                navigator.canShare({ files: [pdfFile] })
+            ) {
+                navigator.share({
+                    title: shareTitle,
+                    files: [pdfFile]
+                }).catch((error) => {
+                    if (error?.name !== 'AbortError') {
+                        console.warn('PDF share failed, opening file instead:', error);
+                        openOrDownloadPdf(pdfBlob, fileName);
+                    }
+                });
+                return;
+            }
+
+            openOrDownloadPdf(pdfBlob, fileName);
+        }
+
+        function openOrDownloadPdf(pdfBlob, fileName) {
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            const openedWindow = window.open(blobUrl, '_blank');
+
+            if (!openedWindow) {
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            setTimeout(() => URL.revokeObjectURL(blobUrl), PDF_BLOB_REVOKE_DELAY_MS);
         }
 
         function copyToClipboard() {
@@ -490,11 +767,7 @@
                 return;
             }
 
-            const today = new Date();
-            const day = String(today.getDate()).padStart(2, '0');
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const year = String(today.getFullYear()).slice(-2);
-            const formattedDate = `${day}.${month}.${year}`;
+            const formattedDate = getFormattedDate();
             const shareTitle = `Attendance - ${formattedDate}`;
             const shareText = `${shareTitle}\n\n${attendanceText}`;
 
