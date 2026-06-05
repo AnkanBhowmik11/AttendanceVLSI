@@ -278,7 +278,7 @@
 
             <div class="output-section" id="outputSection">
                 <div class="output-text" id="outputText"></div>
-                <button class="btn btn-pdf" onclick="generateAttendancePdf()">
+                <button class="btn btn-pdf" onclick="generateAttendancePdf()" aria-label="Export attendance as PDF">
                     📄 PDF
                 </button>
                 <button class="btn btn-copy" onclick="copyToClipboard()">
@@ -360,7 +360,7 @@
 
         ];
 
-        const PDF_BLOB_REVOKE_DELAY_MS = 60 * 60 * 1000;
+        const PDF_BLOB_REVOKE_DELAY_MS = 2 * 60 * 1000;
         const A4_PAGE_WIDTH_MM = 210;
         const A4_PAGE_HEIGHT_MM = 297;
 
@@ -546,8 +546,8 @@
                 }).catch((error) => {
                     if (error && error.name !== 'AbortError') {
                         console.warn('PDF share failed, opening file instead:', error);
+                        openOrDownloadPdf(pdfBlob, fileName);
                     }
-                    openOrDownloadPdf(pdfBlob, fileName);
                 });
                 return;
             }
