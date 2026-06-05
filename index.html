@@ -360,7 +360,7 @@
 
         ];
 
-        const PDF_BLOB_REVOKE_DELAY_MS = 5 * 60 * 1000;
+        const PDF_BLOB_REVOKE_DELAY_MS = 60 * 60 * 1000;
         const A4_PAGE_WIDTH_MM = 210;
         const A4_PAGE_HEIGHT_MM = 297;
 
@@ -479,7 +479,7 @@
             }
 
             if (!window.jspdf || !window.jspdf.jsPDF) {
-                alert('Unable to load PDF library. Please refresh the page and try again.');
+                alert('Unable to load PDF library. Please check your internet connection or try again later.');
                 return;
             }
 
@@ -496,7 +496,8 @@
             const splitIndex = Math.ceil(selectedStudentsList.length / 2);
 
             if (splitIndex > maxRows) {
-                alert(`Too many students for one-page PDF. Selected ${selectedStudentsList.length}, maximum allowed is ${maxStudentsPerPage}. Please deselect some students and try again.`);
+                const studentsToDeselect = selectedStudentsList.length - maxStudentsPerPage;
+                alert(`Too many students for one-page PDF. Selected ${selectedStudentsList.length}, maximum allowed is ${maxStudentsPerPage}. Please deselect at least ${studentsToDeselect} student(s) and try again.`);
                 return;
             }
 
@@ -543,7 +544,9 @@
                     title: `Attendance - ${formattedDate}`,
                     files: [pdfFile]
                 }).catch((error) => {
-                    console.warn('PDF share failed, opening file instead:', error);
+                    if (error && error.name !== 'AbortError') {
+                        console.warn('PDF share failed, opening file instead:', error);
+                    }
                     openOrDownloadPdf(pdfBlob, fileName);
                 });
                 return;
