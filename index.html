@@ -625,7 +625,7 @@
 
             if (splitIndex > maxRows) {
                 const studentsToDeselect = selectedStudentsList.length - maxStudentsPerPage;
-                alert(`Too many students for one-page PDF. Selected ${selectedStudentsList.length}, maximum allowed is ${maxStudentsPerPage}. Please deselect at least ${studentsToDeselect} student(s) and try again.`);
+                alert(`Cannot generate PDF: ${selectedStudentsList.length} students selected exceeds the one-page limit of ${maxStudentsPerPage}. Please deselect at least ${studentsToDeselect} student(s).`);
                 return;
             }
 
@@ -683,7 +683,7 @@
                     title: shareTitle,
                     files: [pdfFile]
                 }).catch((error) => {
-                    if (error && error.name !== 'AbortError') {
+                    if (error?.name !== 'AbortError') {
                         console.warn('PDF share failed, opening file instead:', error);
                         openOrDownloadPdf(pdfBlob, fileName);
                     }
