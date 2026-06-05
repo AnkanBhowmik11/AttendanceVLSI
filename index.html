@@ -360,7 +360,9 @@
 
         ];
 
-        const PDF_BLOB_URL_REVOKE_DELAY_MS = 5 * 60 * 1000;
+        const PDF_BLOB_REVOKE_DELAY_MS = 5 * 60 * 1000;
+        const A4_PAGE_WIDTH_MM = 210;
+        const A4_PAGE_HEIGHT_MM = 297;
 
         let selectedStudents = new Set();
         let filteredStudents = [...students];
@@ -488,14 +490,13 @@
             const marginX = 10;
             const gap = 8;
             const bottomMargin = 10;
-            const pageHeight = 297;
-            const colWidth = (210 - (marginX * 2) - gap) / 2;
-            const maxRows = Math.floor((pageHeight - startY - bottomMargin) / lineHeight);
+            const colWidth = (A4_PAGE_WIDTH_MM - (marginX * 2) - gap) / 2;
+            const maxRows = Math.floor((A4_PAGE_HEIGHT_MM - startY - bottomMargin) / lineHeight);
             const maxStudentsPerPage = maxRows * 2;
             const splitIndex = Math.ceil(selectedStudentsList.length / 2);
 
             if (splitIndex > maxRows) {
-                alert(`Too many students for one-page PDF. Maximum ${maxStudentsPerPage} students are supported.`);
+                alert(`Too many students for one-page PDF. Selected ${selectedStudentsList.length}, maximum allowed is ${maxStudentsPerPage}. Please deselect some students and try again.`);
                 return;
             }
 
@@ -542,7 +543,7 @@
                     title: `Attendance - ${formattedDate}`,
                     files: [pdfFile]
                 }).catch((error) => {
-                    console.log('PDF share failed, opening file instead:', error);
+                    console.warn('PDF share failed, opening file instead:', error);
                     openOrDownloadPdf(pdfBlob, fileName);
                 });
                 return;
@@ -564,7 +565,7 @@
                 document.body.removeChild(link);
             }
 
-            setTimeout(() => URL.revokeObjectURL(blobUrl), PDF_BLOB_URL_REVOKE_DELAY_MS);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), PDF_BLOB_REVOKE_DELAY_MS);
         }
 
         function copyToClipboard() {
