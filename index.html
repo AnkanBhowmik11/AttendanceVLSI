@@ -485,8 +485,10 @@
             const lineHeight = 6;
             const marginX = 10;
             const gap = 8;
+            const bottomMargin = 10;
+            const pageHeight = 297;
             const colWidth = (210 - (marginX * 2) - gap) / 2;
-            const maxRows = Math.floor((297 - startY - 10) / lineHeight);
+            const maxRows = Math.floor((pageHeight - startY - bottomMargin) / lineHeight);
             const splitIndex = Math.ceil(selectedStudentsList.length / 2);
 
             if (splitIndex > maxRows) {
@@ -559,7 +561,8 @@
                 document.body.removeChild(link);
             }
 
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 300000);
+            const blobUrlRevokeDelayMs = 300000;
+            setTimeout(() => URL.revokeObjectURL(blobUrl), blobUrlRevokeDelayMs);
         }
 
         function copyToClipboard() {
