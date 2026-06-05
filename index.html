@@ -490,7 +490,7 @@
             const splitIndex = Math.ceil(selectedStudentsList.length / 2);
 
             if (splitIndex > maxRows) {
-                alert('Too many students for a single-page two-column PDF.');
+                alert(`Too many students for one-page PDF. Maximum ${maxRows * 2} students are supported.`);
                 return;
             }
 
@@ -536,7 +536,8 @@
                 navigator.share({
                     title: `Attendance - ${formattedDate}`,
                     files: [pdfFile]
-                }).catch(() => {
+                }).catch((error) => {
+                    console.log('PDF share failed, opening file instead:', error);
                     openOrDownloadPdf(pdfBlob, fileName);
                 });
                 return;
@@ -547,15 +548,18 @@
 
         function openOrDownloadPdf(pdfBlob, fileName) {
             const blobUrl = URL.createObjectURL(pdfBlob);
-            const link = document.createElement('a');
-            link.href = blobUrl;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const openedWindow = window.open(blobUrl, '_blank');
 
-            window.open(blobUrl, '_blank');
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+            if (!openedWindow) {
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 300000);
         }
 
         function copyToClipboard() {
