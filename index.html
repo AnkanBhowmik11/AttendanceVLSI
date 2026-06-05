@@ -360,6 +360,8 @@
 
         ];
 
+        const PDF_BLOB_URL_REVOKE_DELAY_MS = 5 * 60 * 1000;
+
         let selectedStudents = new Set();
         let filteredStudents = [...students];
 
@@ -475,7 +477,7 @@
             }
 
             if (!window.jspdf || !window.jspdf.jsPDF) {
-                alert('PDF generator is not available right now.');
+                alert('Unable to load PDF library. Please refresh the page and try again.');
                 return;
             }
 
@@ -489,10 +491,11 @@
             const pageHeight = 297;
             const colWidth = (210 - (marginX * 2) - gap) / 2;
             const maxRows = Math.floor((pageHeight - startY - bottomMargin) / lineHeight);
+            const maxStudentsPerPage = maxRows * 2;
             const splitIndex = Math.ceil(selectedStudentsList.length / 2);
 
             if (splitIndex > maxRows) {
-                alert(`Too many students for one-page PDF. Maximum ${maxRows * 2} students are supported.`);
+                alert(`Too many students for one-page PDF. Maximum ${maxStudentsPerPage} students are supported.`);
                 return;
             }
 
@@ -561,8 +564,7 @@
                 document.body.removeChild(link);
             }
 
-            const blobUrlRevokeDelayMs = 300000;
-            setTimeout(() => URL.revokeObjectURL(blobUrl), blobUrlRevokeDelayMs);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), PDF_BLOB_URL_REVOKE_DELAY_MS);
         }
 
         function copyToClipboard() {
