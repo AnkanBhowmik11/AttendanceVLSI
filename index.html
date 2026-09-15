@@ -364,8 +364,22 @@
         const A4_PAGE_WIDTH_MM = 210;
         const A4_PAGE_HEIGHT_MM = 297;
 
+        const studentsWithRegistration = students.map(student => ({
+            ...student,
+            regNo: student.regNo || 'N/A'
+        }));
+
+        const getRollLastTwoDigits = (rollNo) => Number(String(rollNo).slice(-2)) || 0;
+        const sortedStudents = [...studentsWithRegistration].sort((a, b) => {
+            const lastTwoDifference = getRollLastTwoDigits(a.rollNo) - getRollLastTwoDigits(b.rollNo);
+            if (lastTwoDifference !== 0) {
+                return lastTwoDifference;
+            }
+            return String(a.rollNo).localeCompare(String(b.rollNo));
+        });
+
         let selectedStudents = new Set();
-        let filteredStudents = [...students];
+        let filteredStudents = [...sortedStudents];
 
         function renderStudents() {
             const listContainer = document.getElementById('studentList');
@@ -383,7 +397,7 @@
                     </div>
                     <div class="student-info">
                         <div class="student-name">${student.name}</div>
-                        <div class="student-roll">Roll No: ${student.rollNo}</div>
+                        <div class="student-roll">Roll No: ${student.rollNo} | Reg No: ${student.regNo}</div>
                     </div>
                 </div>
             `).join('');
@@ -424,9 +438,10 @@
 
         function filterStudents(searchTerm) {
             const term = searchTerm.toLowerCase();
-            filteredStudents = students.filter(student => 
+            filteredStudents = sortedStudents.filter(student => 
                 student.name.toLowerCase().includes(term) || 
-                student.rollNo.toLowerCase().includes(term)
+                student.rollNo.toLowerCase().includes(term) ||
+                student.regNo.toLowerCase().includes(term)
             );
             renderStudents();
         }
@@ -440,7 +455,7 @@
             const selectedStudentsList = getSelectedStudentsList();
 
             const attendanceText = selectedStudentsList
-                .map(student => `${student.name} (${student.rollNo})`)
+                .map(student => `${student.name} (Roll: ${student.rollNo}, Reg: ${student.regNo})`)
                 .join('\n');
 
             document.getElementById('outputText').textContent = attendanceText;
@@ -448,7 +463,7 @@
         }
 
         function getSelectedStudentsList() {
-            return students.filter(student => selectedStudents.has(student.rollNo));
+            return sortedStudents.filter(student => selectedStudents.has(student.rollNo));
         }
 
         function getFormattedDate() {
@@ -640,7 +655,7 @@
 
             const formatEntry = (student, serialNumber) => {
                 if (includeRollNo) {
-                    return `${serialNumber}. ${student.name} (${student.rollNo})`;
+                    return `${serialNumber}. ${student.name} (Roll: ${student.rollNo}, Reg: ${student.regNo})`;
                 }
                 return `${serialNumber}. ${student.name}`;
             };
