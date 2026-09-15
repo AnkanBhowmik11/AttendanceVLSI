@@ -304,7 +304,7 @@
   { name: "Ali Samiya Parvin", rollNo: "10032624007" },
   { name: "Ariyan Kumar Mahato", rollNo: "10032624008" },
   { name: "Prolayjit Biswas", rollNo: "10032624009" },
-  { name: "Pratyush Parui", rollNo: "10032624010" },
+  { name: "Pratyus Parui", rollNo: "10032624010" },
   { name: "Saumyadeep Ghosh", rollNo: "10032624011" },
   { name: "Subhajit Halder", rollNo: "10032624012" },
   { name: "Sumanta Sarathi Sarkar", rollNo: "10032624013" },
@@ -327,7 +327,7 @@
   { name: "Abhirup Sasmal", rollNo: "10032624030" },
   { name: "Tonmoy Gayen", rollNo: "10032624031" },
   { name: "Aditya Ghorai", rollNo: "10032624032" },
-  { name: "Md Rounak Mondal", rollNo: "10032624033" },
+  { name: "MD Rounak Mondal", rollNo: "10032624033" },
   { name: "Raja Dafadar", rollNo: "10032624034" },
   { name: "Souvik Basak", rollNo: "10032624035" },
   { name: "Shubham Kumar Soni", rollNo: "10032624036" },
@@ -348,10 +348,14 @@
   { name: "Aparajita Chattopadhyay", rollNo: "10032624070" },
   { name: "Agnick Ghosh", rollNo: "10032624071" },
   { name: "Shubhajit Saha", rollNo: "10032625051" },
+  { name: "Bivash Banerjee", rollNo: "10032625052" },
   { name: "Puskar Vishwakarma", rollNo: "10032625053" },
   { name: "Smriti Roy", rollNo: "10032625054" },
+  { name: "Soham Sar", rollNo: "10032625055" },
   { name: "Papon Chowdhury", rollNo: "10032625056" },
   { name: "Sova Jana", rollNo: "10032625057" },
+  { name: "Mayukh Dey", rollNo: "10032625059" },
+  { name: "Aditya Saha", rollNo: "10032625061" },
   { name: "Chandan Das", rollNo: "10032625062" },
   { name: "Aditya Mondal", rollNo: "10032625064" },
   { name: "Shoumajit Sarkar", rollNo: "10032625065" },
@@ -364,13 +368,8 @@
         const A4_PAGE_WIDTH_MM = 210;
         const A4_PAGE_HEIGHT_MM = 297;
 
-        const studentsWithRegistration = students.map(student => ({
-            ...student,
-            regNo: student.regNo || 'N/A'
-        }));
-
         const getRollLastTwoDigits = (rollNo) => Number(String(rollNo).slice(-2)) || 0;
-        const sortedStudents = [...studentsWithRegistration].sort((a, b) => {
+        const sortedStudents = [...students].sort((a, b) => {
             const lastTwoDifference = getRollLastTwoDigits(a.rollNo) - getRollLastTwoDigits(b.rollNo);
             if (lastTwoDifference !== 0) {
                 return lastTwoDifference;
@@ -397,7 +396,7 @@
                     </div>
                     <div class="student-info">
                         <div class="student-name">${student.name}</div>
-                        <div class="student-roll">Roll No: ${student.rollNo} | Reg No: ${student.regNo}</div>
+                        <div class="student-roll">Roll No: ${student.rollNo}</div>
                     </div>
                 </div>
             `).join('');
@@ -440,8 +439,7 @@
             const term = searchTerm.toLowerCase();
             filteredStudents = sortedStudents.filter(student => 
                 student.name.toLowerCase().includes(term) || 
-                student.rollNo.toLowerCase().includes(term) ||
-                student.regNo.toLowerCase().includes(term)
+                student.rollNo.toLowerCase().includes(term)
             );
             renderStudents();
         }
@@ -455,7 +453,7 @@
             const selectedStudentsList = getSelectedStudentsList();
 
             const attendanceText = selectedStudentsList
-                .map(student => `${student.name} (Roll: ${student.rollNo}, Reg: ${student.regNo})`)
+                .map(student => `${student.name} (Roll: ${student.rollNo})`)
                 .join('\n');
 
             document.getElementById('outputText').textContent = attendanceText;
@@ -655,7 +653,7 @@
 
             const formatEntry = (student, serialNumber) => {
                 if (includeRollNo) {
-                    return `${serialNumber}. ${student.name} (Roll: ${student.rollNo}, Reg: ${student.regNo})`;
+                    return `${serialNumber}. ${student.name} (Roll: ${student.rollNo})`;
                 }
                 return `${serialNumber}. ${student.name}`;
             };
